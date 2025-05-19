@@ -1,103 +1,180 @@
-import Image from "next/image";
+"use client";
+import React, { useEffect, useState } from 'react'
+import { IoIosSwap } from "react-icons/io";
 
-export default function Home() {
+export default function page() {
+  const [amount, setAmount] = useState<number>(1)
+  const [fromCurrency, setFromCurrency] = useState<string>('BTC')
+  const [toCurrency, setToCurrency] = useState<string>('USD')
+  const [result, setResult] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+
+  const currencies = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA', 'DOGE', 'SOL', 'BNB', 'DOT', 'AVAX', 
+  'MATIC', 'SHIB', 'TRX', 'LINK', 'UNI', 'XLM', 'ATOM', 'USD', 'EUR', 'JPY', 'GBP'];
+
+  const handleConvert = async () => {
+    try {
+      if (amount <= 0) {
+        setError("Please enter a valid amount")
+      }
+      setLoading(true)
+      const response = await fetch(`/api/rate?from=${fromCurrency}&to=${toCurrency}`);
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || "Conversion failed")
+        return
+      }
+
+      const convertedAmount = amount * data.rate
+      setResult(parseFloat(convertedAmount.toFixed(8)))
+      setLastUpdated(new Date(data.timestamp).toLocaleDateString())
+
+      const interval = setInterval(async () => {
+        const updatedResponse = await fetch(`/api/rate?from=${fromCurrency}&to=${toCurrency}`);
+        const updatedData = await updatedResponse.json()
+
+        if (updatedResponse.ok) {
+          const updatedConverted = amount * updatedData.rate
+          setResult(parseFloat(updatedConverted.toFixed(8)))
+          setLastUpdated(new Date(updatedData.timestamp).toLocaleDateString())
+        }
+      }, 30000)
+
+      return () => clearInterval(interval)
+    } catch (err) {
+      setError("An error occurred during conversion")
+      console.log(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (result !== null) {
+      handleConvert()
+    }
+  }, [fromCurrency, toCurrency])
+
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className='min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors'>
+      <main className='container mx-auto px-4 py-12'>
+        {/* converter card */}
+        <div className='max-w-lg mx-auto p-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl'>
+          <div className='space-y-6'>
+            <label className='block text-sm font-bold dark:text-gray-300'>Amount</label>
+            <div className='relative'>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value)
+                  setAmount(!isNaN(value) ? Math.max(0, value) : 0)
+                }}
+                className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+                min="0.1"
+                step="0.1"
+                placeholder='0.0'
+              />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+              {
+                fromCurrency !== toCurrency && lastUpdated && (
+                  <div className='absolute right-4  text-sm front-bold'>
+                        last updated: {lastUpdated}
+                  </div>
+                )
+              }
+
+            </div>
+          </div>
+
+          {/* Currency selection */}
+          <div className='grid grid-cols-2 gap-6 mt-2'>
+            <div>
+              <label htmlFor="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From</label>
+              <select
+              value={fromCurrency}
+              onChange={(e)=> setFromCurrency(e.target.value)}
+              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+              >
+               {currencies.map((currency)=> (
+                  <option key={currency} value={currency}>{currency}</option>
+               ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To</label>
+              <select
+              value={toCurrency}
+              onChange={(e)=> setToCurrency(e.target.value)}
+              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+              >
+               {currencies.map((currency)=> (
+                  <option key={currency} value={currency}>{currency}</option>
+               ))}
+              </select>
+            </div>
+          </div>
+
+          {/* swap button */}
+          <button
+          onClick={()=> {
+            setFromCurrency(toCurrency)
+            setToCurrency(fromCurrency)
+            setResult(null)
+            handleConvert()
+          }}
+            className=" mt-2 w-full py-2 rounded-lg bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center gap-2 font-medium transition hover:bg-blue-200 dark:hover:bg-blue-900/40"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            <IoIosSwap size={20}/>
+            Swap currencies
+          </button>
+
+          {/* converter button */}
+          <button
+          onClick={handleConvert}
+          disabled={loading}
+          className={`w-full py-3 rounded-lg mt-5 font-semibold shadow-md hover:shadow-lg transform transition hover:-translate-y-0.5
+          ${loading 
+            ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
+            : 'bg-gradient-to-r from-blue-600 to-purple-600 test-white'
+          }`}
           >
-            Read our docs
-          </a>
+            {loading ? 'Converting...' : "Converter now"}
+          </button>
+
+          { error ? (
+              <div className='mt-6 p-4 bg-red-50 dark:bg-red-900/20 boder'>
+                <p className='text-sm text-red-600'>{error}</p>
+              </div>
+          ) : (
+            result != null && (
+              <div className="mt-6 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 animate-fade-in">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Conversion Result</p>
+                    {lastUpdated && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Updated: {lastUpdated}</p>
+                    )}
+                  </div>
+                  <p className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+                    {amount} {fromCurrency} = {result.toFixed(6)} {toCurrency}
+                  </p>
+                  <div className="mt-2 text-right text-xs text-gray-500 dark:text-gray-400">
+                    Real-time rate from CoinGecko
+                  </div>
+                </div>
+            )
+          )
+            
+          }
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
-  );
+  )
 }
+
+
