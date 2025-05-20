@@ -10,9 +10,10 @@ export default function page() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
+  const crypto = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA', 'DOGE', 'SOL', 'BNB', 'DOT', 'AVAX', 
+  'MATIC', 'SHIB', 'TRX', 'LINK', 'UNI', 'XLM', 'ATOM', 'JPY', 'GBP'];
 
-  const currencies = ['BTC', 'ETH', 'LTC', 'XRP', 'ADA', 'DOGE', 'SOL', 'BNB', 'DOT', 'AVAX', 
-  'MATIC', 'SHIB', 'TRX', 'LINK', 'UNI', 'XLM', 'ATOM', 'USD', 'EUR', 'JPY', 'GBP'];
+  const cash = ['USD', 'EUR','JPY','GBP','AUD','CAD','CNY','INR','SGD','CHF','KRW','BRL']
 
   const handleConvert = async () => {
     try {
@@ -64,8 +65,8 @@ export default function page() {
       <main className='container mx-auto px-4 py-12'>
         {/* converter card */}
         <div className='max-w-lg mx-auto p-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl'>
-          <div className='space-y-6'>
-            <label className='block text-sm font-bold dark:text-gray-300'>Amount</label>
+          <div className='space-y-3'>
+            <label className='block text-sm font-bold text-black dark:text-white'>Amount</label>
             <div className='relative'>
               <input
                 type="number"
@@ -74,7 +75,7 @@ export default function page() {
                   const value = parseFloat(e.target.value)
                   setAmount(!isNaN(value) ? Math.max(0, value) : 0)
                 }}
-                className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+                className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
                 min="0.1"
                 step="0.1"
                 placeholder='0.0'
@@ -82,8 +83,8 @@ export default function page() {
 
               {
                 fromCurrency !== toCurrency && lastUpdated && (
-                  <div className='absolute right-4  text-sm front-bold'>
-                        last updated: {lastUpdated}
+                  <div className='absolute right-4 mt-2 text-sm front-bold text-black dark:text-white'>
+                        Last updated: {lastUpdated}
                   </div>
                 )
               }
@@ -92,30 +93,45 @@ export default function page() {
           </div>
 
           {/* Currency selection */}
-          <div className='grid grid-cols-2 gap-6 mt-2'>
+          <div className='grid grid-cols-2 gap-6 mt-5'>
             <div>
-              <label htmlFor="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">From</label>
               <select
               value={fromCurrency}
               onChange={(e)=> setFromCurrency(e.target.value)}
-              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 dark:text-white border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
               >
-               {currencies.map((currency)=> (
+                 <optgroup label='Crypto'>
+               {crypto.map((currency)=> (
                   <option key={currency} value={currency}>{currency}</option>
                ))}
+               </optgroup>
+               <optgroup label='Cash'>
+                {cash.map((currency)=> (
+                  <option key={currency} value={currency}>{currency}</option>
+                ))}
+                </optgroup>
               </select>
             </div>
 
             <div>
-              <label htmlFor="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-white mb-2">To</label>
               <select
               value={toCurrency}
               onChange={(e)=> setToCurrency(e.target.value)}
-              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
+              className='w-full px-4 py-3 rounded-lg bg-gray-100 dark:text-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition  '
               >
-               {currencies.map((currency)=> (
+               
+                <optgroup label='Cash'>
+                {cash.map((currency)=> (
+                  <option key={currency} value={currency}>{currency}</option>
+                ))}
+                </optgroup>
+                <optgroup label='Crypto'>
+               {crypto.map((currency)=> (
                   <option key={currency} value={currency}>{currency}</option>
                ))}
+               </optgroup>
               </select>
             </div>
           </div>
@@ -141,7 +157,7 @@ export default function page() {
           className={`w-full py-3 rounded-lg mt-5 font-semibold shadow-md hover:shadow-lg transform transition hover:-translate-y-0.5
           ${loading 
             ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed'
-            : 'bg-gradient-to-r from-blue-600 to-purple-600 test-white'
+            : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white'
           }`}
           >
             {loading ? 'Converting...' : "Converter now"}
